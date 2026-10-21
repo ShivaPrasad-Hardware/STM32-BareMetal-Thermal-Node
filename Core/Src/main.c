@@ -18,7 +18,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "i2c.h"
 #include "gpio.h"
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -86,7 +90,12 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  ssd1306_Init();
+  ssd1306_SetCursor(10, 20);
+  ssd1306_WriteString("Phase 2 OK", Font_11x18, White);
+  ssd1306_UpdateScreen();
 
   /* USER CODE END 2 */
 
@@ -97,13 +106,28 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-   if (HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_1)==GPIO_PIN_RESET)
+  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) == GPIO_PIN_RESET)
   {
-	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	  HAL_Delay(200);
+    // Button pressed
+   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // LED ON
+   ssd1306_Fill(Black);
+   ssd1306_SetCursor(10, 20);
+   ssd1306_WriteString("BTN PRESSED!", Font_7x10, White);
+   ssd1306_UpdateScreen();
+  }
+   else {
+   // Button released (Idle)
+   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET); // LED OFF
+   ssd1306_Fill(Black);
+   ssd1306_SetCursor(10, 20);s
+   ssd1306_WriteString("Thermal Node", Font_7x10, White);
+   ssd1306_SetCursor(10, 35);
+   ssd1306_WriteString("Idle...", Font_6x8, White);
+   ssd1306_UpdateScreen();
+  }
+   HAL_Delay(100);
   }
   /* USER CODE END 3 */
-  }
 }
 
 /**
