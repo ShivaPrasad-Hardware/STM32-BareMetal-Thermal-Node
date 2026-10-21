@@ -27,6 +27,9 @@ This project is developed in isolated, modular phases before final integration:
 
 
 2.  **Visual Feedback:** Utilizing the STM32 HAL $I^2C$ peripheral to interface with the OLED display for real-time local telemetry.
+![OLED Idle State](docs/phase2_oled_idle.jpg)
+![OLED Button Pressed State](docs/phase2_oled_press.jpg)
+
 3.  **Bare-Metal Sensor Driver:** Bypassing standard libraries to write a from-scratch 1-Wire protocol driver for the DS18B20, utilizing direct hardware timer manipulation for strict microsecond delays. Timing verified via logic analyzer.
 4.  **Industrial Control:** HAL GPIO output logic mapped to threshold states to trigger the 5V relay.
 5.  **Telemetry Bridge:** UART communication mapping between the STM32 and ESP32 to transmit payload data to a cloud dashboard.
