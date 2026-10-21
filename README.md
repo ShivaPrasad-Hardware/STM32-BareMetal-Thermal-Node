@@ -41,7 +41,7 @@ This project is developed in isolated, modular phases before final integration:
 *   **IDE:** STM32CubeIDE, Arduino IDE
 *   **Configuration:** STM32CubeMX
 *   **Languages:** Embedded C (Hybrid HAL/Bare-Metal), C++
-*   **Dashboards:** ThingSpeak (IoT Telemetry)
+*   **Dashboards:** ThingSpeak (IoT Time-Series Telemetry)
 
 ## 📄 License
 This project is licensed under the MIT License.
