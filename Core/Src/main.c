@@ -20,12 +20,13 @@
 #include "main.h"
 #include "i2c.h"
 #include "gpio.h"
-#include "ssd1306.h"
-#include "ssd1306_fonts.h"
-
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
+#include <stdio.h>
+#include "ds18b20.h"
 
 /* USER CODE END Includes */
 
@@ -58,17 +59,16 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
+void SystemClock_Config(void);
+
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
+
 
   /* USER CODE END 1 */
 
@@ -96,46 +96,75 @@ int main(void)
   ssd1306_SetCursor(10, 20);
   ssd1306_WriteString("Phase 2 OK", Font_11x18, White);
   ssd1306_UpdateScreen();
-
+  DWT_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
+  uint32_t last_reset_tick = 0;
+	  const uint32_t reset_interval = 1000; // 1 second interval
 
-    /* USER CODE BEGIN 3 */
-  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) == GPIO_PIN_RESET)
-  {
-    // Button pressed
-   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // LED ON
-   ssd1306_Fill(Black);
-   ssd1306_SetCursor(10, 20);
-   ssd1306_WriteString("BTN PRESSED!", Font_7x10, White);
-   ssd1306_UpdateScreen();
-  }
-   else {
-   // Button released (Idle)
-   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET); // LED OFF
-   ssd1306_Fill(Black);
-   ssd1306_SetCursor(10, 20);s
-   ssd1306_WriteString("Thermal Node", Font_7x10, White);
-   ssd1306_SetCursor(10, 35);
-   ssd1306_WriteString("Idle...", Font_6x8, White);
-   ssd1306_UpdateScreen();
-  }
-   HAL_Delay(100);
-  }
-  /* USER CODE END 3 */
+	  while (1)
+	  {
+	    /* USER CODE END WHILE */
+
+	    /* USER CODE BEGIN 3 */
+	      // 1. Check the physical button continuously (instantly responsive)
+	      if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) == GPIO_PIN_RESET)
+	      {
+	          // Button pressed
+	          HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // LED ON
+	          ssd1306_Fill(Black);
+	          ssd1306_SetCursor(10, 20);
+	          ssd1306_WriteString("BTN PRESSED!", Font_7x10, White);
+	          ssd1306_UpdateScreen();
+	      }
+	      else
+	      {
+	          // Button released (Idle)
+	          HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET); // LED OFF
+	      }
+
+	      // 2. Non-blocking timer check for live DS18B20 temperature
+	      if ((HAL_GetTick() - last_reset_tick) >= 2000)
+	      {
+	          last_reset_tick = HAL_GetTick(); // Reset timer
+
+	          // Kick off conversion and read directly
+	          DS18B20_StartConversion();
+	          delay_us(750000); // Wait 750ms for conversion
+
+	          float temp_c = DS18B20_ReadTemperature();
+
+	          // Split float into whole and fractional parts
+	          int temp_whole = (int)temp_c;
+	          int temp_fract = (int)((temp_c - temp_whole) * 100);
+	          if (temp_fract < 0) temp_fract = -temp_fract;
+
+	          // Format and display live temperature
+	          char temp_str[32];
+	          sprintf(temp_str, "Temp: %d.%02d C", temp_whole, temp_fract);
+
+	          ssd1306_Fill(Black);
+	          ssd1306_SetCursor(10, 10);
+	          ssd1306_WriteString("Thermal Node", Font_7x10, White);
+	          ssd1306_SetCursor(10, 30);
+	          ssd1306_WriteString(temp_str, Font_7x10, White);
+	          ssd1306_UpdateScreen();
+
+	      // Small delay to prevent overwhelming the CPU and I2C bus
+	          HAL_Delay(10);
+	          /* USER CODE END 3 */
+	      }           // <--- Closes the while (1) loop
+
+	  }               // <--- Closes the main() function
 }
+	  /**
+	    * @brief System Clock Configuration
+	    */
+	  void SystemClock_Config(void)
+	  {
+	      // ...
 
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -150,7 +179,12 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 84;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -160,12 +194,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -187,8 +221,9 @@ void Error_Handler(void)
   while (1)
   {
   }
-  /* USER CODE END Error_Handler_Debug */
 }
+  /* USER CODE END Error_Handler_Debug */
+
 #ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
