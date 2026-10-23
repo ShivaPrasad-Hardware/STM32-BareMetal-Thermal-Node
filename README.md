@@ -33,13 +33,13 @@ This project is developed in isolated, modular phases before final integration:
 3.  **Bare-Metal Sensor Driver:** Bypassing standard libraries to write a from-scratch 1-Wire protocol driver for the DS18B20, utilizing direct hardware timer manipulation for strict microsecond delays. Timing verified via logic analyzer.
 ​![Live Telemetry](docs/temp01%20(1).jpg)
 ![Hardware Setup](docs/temp01%20(2).jpg)
-![Logic Analyzer Waveform](docs/Wave%20form%20SS.png)
 
 4.  **Industrial Control:** HAL GPIO output logic mapped to threshold states to trigger the 5V relay.
 5.  **Telemetry Bridge:** UART communication mapping between the STM32 and ESP32 to transmit payload data to a cloud dashboard.
 
 ## 🔬 Timing Verification
-*(Upload a screenshot of your 1-Wire logic analyzer waveforms to the /docs folder and link it here later)*
+![Logic Analyzer Waveform](docs/Wave%20form%20SS.png)
+
 > "Custom bare-metal 1-Wire driver timing verified down to the microsecond using an 8-channel logic analyzer to ensure strict data sheet compliance."
 
 ## 🚀 Getting Started
