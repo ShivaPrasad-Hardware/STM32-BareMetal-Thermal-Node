@@ -36,6 +36,7 @@ This project is developed in isolated, modular phases before final integration:
 
 4.  **Industrial Control:** HAL GPIO output logic mapped to threshold states to trigger the 5V relay.
 5.  **Telemetry Bridge:** UART communication mapping between the STM32 and ESP32 to transmit payload data to a cloud dashboard.
+6. Custom PCB Design (In Progress): Transitioning the bare-metal breadboard prototype into a custom KiCad PCB, featuring dedicated test points for direct logic analyzer probing.
 
 ## 🔬 Timing Verification
 ![Logic Analyzer Waveform](docs/Wave%20form%20SS.png)
@@ -48,7 +49,6 @@ This project is developed in isolated, modular phases before final integration:
 3.  Compile and flash the firmware to the Nucleo-F401RE via the onboard ST-LINK.
 4.  Open the `/esp32_bridge` sketch in **Arduino IDE** and flash it to the ESP32 board.
 5.  Wire peripherals according to the pinout definitions in `main.h`.
-6. Custom PCB Design (In Progress): Transitioning the bare-metal breadboard prototype into a custom KiCad PCB, featuring dedicated test points for direct logic analyzer probing.
 
 ## 🛠️ Software & Tools
 *   **IDE:** STM32CubeIDE, Arduino IDE
